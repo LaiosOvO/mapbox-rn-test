@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, PermissionsAndroid, Platform, Alert, TextInput, TouchableOpacity, Modal } from 'react-native';
+import { View, StyleSheet, PermissionsAndroid, Platform, Alert, TextInput, TouchableOpacity, Modal,Text } from 'react-native';
 import Mapbox,{ Localization }  from '@rnmapbox/maps';
 import Geolocation from '@react-native-community/geolocation';
 import { useNavigation } from '@react-navigation/native';
@@ -29,6 +29,11 @@ const MapboxTest = () => {
     const [activeGeoJson, setActiveGeoJson] = useState(null);
     const [savedGeoJsons, setSavedGeoJsons] = useState([
     ]);
+    const [annotations, setAnnotations] = useState([
+        { id: '1', coordinates: [120.16, 30.28], name: '标注点1' },
+        { id: '2', coordinates: [120.17, 30.29], name: '标注点2' },
+    ]);
+
     const [drawingStyle, setDrawingStyle] = useState({
         color: '#4285F4',
         lineWidth: 3
@@ -432,6 +437,19 @@ const MapboxTest = () => {
                         <View style={styles.userLocationMarker} />
                     </Mapbox.PointAnnotation>
                 )}
+
+                {annotations.map(annotation => (
+                        <Mapbox.PointAnnotation
+                            key={annotation.id}
+                            id={annotation.id}
+                            coordinate={annotation.coordinates}
+                        >
+                            <View style={{ alignItems: 'center' }}>
+                            <View style={{ width: 20, height: 20, backgroundColor: 'red', borderRadius: 10 }} />
+                            <Text>{annotation.geometry?.properties?.title}</Text>
+                            </View>
+                        </Mapbox.PointAnnotation>
+                ))}
 
                 {renderUserMarkers()}
                 {renderFeatures()}
