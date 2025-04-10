@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, PermissionsAndroid, Platform, Alert, TextInput, TouchableOpacity, Modal } from 'react-native';
-import Mapbox from '@rnmapbox/maps';
+import Mapbox,{ Localization }  from '@rnmapbox/maps';
 import Geolocation from '@react-native-community/geolocation';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -12,8 +12,11 @@ import AnnotationManager from '../components/AnnotationManager';
 import { getLabelUserPage, saveLabelUser, deleteLabelUser } from '../api/linban/label/index';
 import { getUserDetail, getGroupUsers, updateUserLocation } from '../api/linban';
 import UserInfoCard from '../components/UserInfoCard';
+// import { Localization } from '@rnmapbox/maps';
+
 
 Mapbox.setAccessToken('sk.eyJ1IjoiN3huM3VtbHQiLCJhIjoiY205M3Y3bzZuMG11NzJqcXozOTQ5YjB0YSJ9.fk8RU7RNlM0QDj9WUw-84A');
+// Mapbox.setLanguage('zh-Hans');
 
 const MapboxTest = () => {
     const navigation = useNavigation();
@@ -42,7 +45,9 @@ const MapboxTest = () => {
             (position) => {
                 const { longitude, latitude } = position.coords;
                 setUserLocation([longitude, latitude]);
-                console.log(userLocation)
+                console.log("***************")
+                console.log("获取到定位 \n"+longitude,latitude);
+                console.log("*************")
             },
             (error) => {
                 console.log('获取位置失败:', error);
@@ -84,7 +89,15 @@ const MapboxTest = () => {
         }
     };
 
+
     useEffect(() => {
+        // Localization.setLanguage('zh-Hans'); // 强制设置为简体中文
+        console.log(Localization)
+        if(Localization){
+
+            Localization.setLanguage('zh-Hans'); // 设置为简体中文
+
+        }
         requestLocationPermission();
     }, []);
 
@@ -162,6 +175,37 @@ const MapboxTest = () => {
         // 如果点击空白处，关闭用户信息卡片
         setShowUserInfo(false);
         setSelectedUser(null);
+        if (!drawingMode || !activeGeoJson) return;
+
+        const coords = event.geometry.coordinates;
+        const newGeoJson = JSON.parse(JSON.stringify(activeGeoJson));
+
+        try {
+            switch (newGeoJson.geometry.type) {
+                case 'Point':
+                    newGeoJson.geometry.coordinates = coords;
+                    break;
+                case 'LineString':
+                    newGeoJson.geometry.coordinates = [
+                        ...(newGeoJson.geometry.coordinates || []),
+                        coords
+                    ];
+                    break;
+                case 'Polygon':
+                    if (!newGeoJson.geometry.coordinates[0]) {
+                        newGeoJson.geometry.coordinates[0] = [];
+                    }
+                    newGeoJson.geometry.coordinates[0] = [
+                        ...(newGeoJson.geometry.coordinates[0] || []),
+                        coords
+                    ];
+                    break;
+            }
+            setActiveGeoJson(newGeoJson);
+        } catch (error) {
+            console.error('处理坐标时出错:', error);
+            Alert.alert('绘图错误', '在处理绘图坐标时出现错误，请稍后重试。');
+        }
     };
 
     const handleUserPress = (user) => {
@@ -319,7 +363,7 @@ const MapboxTest = () => {
     };
 
     const handleSearchPress = () => {
-        navigation.navigate('History');
+        navigation.navigate('LinbanList');
     };
 
     const renderUserMarkers = () => {
@@ -373,10 +417,11 @@ const MapboxTest = () => {
                 ref={mapRef}
                 style={styles.map}
                 onPress={handleMapPress}
-            >
+                styleURL="mapbox://styles/mapbox/streets-zh-v1"
+                >
                 <Mapbox.Camera
                     zoomLevel={14}
-                    centerCoordinate={userLocation || [-122.084, 37.421998333333335]}
+                    centerCoordinate={userLocation || [121.474000,31.230001]}
                 />
 
                 {userLocation && (

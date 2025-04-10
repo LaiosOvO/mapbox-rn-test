@@ -14,6 +14,9 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {createStackNavigator} from '@react-navigation/stack';
 import BootSplash from 'react-native-bootsplash';
 import MapboxTest from '../pages/MapboxTest';
+import LinbanList from '../pages/LinbanList'; // 确保导入林班列表页面
+import LinbanDetail from '../pages/LinbanDetail'; // 确保导入林班列表页面
+
 
 const Stack = createStackNavigator();
 
@@ -95,6 +98,23 @@ const RootScreen = () => {
             headerShown: false,
           }}
         />
+
+      <Stack.Screen
+        name="LinbanList"
+        component={LinbanList}
+        options={{
+          headerShown: true, // 根据需要显示或隐藏头部
+          title: '林班列表', // 设置页面标题
+        }}
+      />
+      <Stack.Screen
+        name="LinbanDetail"
+        component={LinbanDetail}
+        options={{
+          headerShown: true, // 根据需要显示或隐藏头部
+          title: '林班列表', // 设置页面标题
+        }}
+      />
       </Stack.Navigator>
     </NavigationContainer>
   );
