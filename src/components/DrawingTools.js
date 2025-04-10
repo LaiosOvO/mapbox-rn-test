@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { getLabelUserPage, saveLabelUser,deleteLabelUser,listLabelUserPage } from '../api/linban/label/index'
+import { useSelector } from 'react-redux';
+import { getLabelUserPage, saveLabelUser, deleteLabelUser, listLabelUserPage } from '../api/linban/label/index';
 
 const DrawingTools = ({ 
     visible, 
@@ -17,20 +18,25 @@ const DrawingTools = ({
     const [userLabel, setUserLabel] = useState([]);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const userInfo = useSelector(state => state.userStore.userInfo);
     
-    // TODO 获取用户自己的id从store里面
     const loadData = async () => {
-        try{
+        try {
             let params = {
                 pageNum: 1,
                 pageSize: 100,
-                userId: 1
+                userId: userInfo.id
             }
+            
+            console.log("****************")
+            console.log(params)
+            console.log("****************")
 
             let res = await listLabelUserPage(params);
-            
-            setUserLabel(res.data)
-        }catch(error){
+            if (res.code === 0) {
+                setUserLabel(res.data);
+            }
+        } catch(error) {
             console.log('获取标注数据失败:', error);
         }
     }
@@ -73,8 +79,6 @@ const DrawingTools = ({
             title: title.trim(),
             description: description.trim()
         });
-
-
 
         onCancel();
         onClearMapData();
@@ -199,7 +203,8 @@ const styles = StyleSheet.create({
         width: 300,
         backgroundColor: 'white',
         padding: 16,
-        elevation: 5,
+        elevation: 9999,
+        zIndex: 9999,
         shadowColor: '#000',
         shadowOffset: { width: -2, height: 0 },
         shadowOpacity: 0.1,

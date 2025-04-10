@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = "http://8.130.186.54:9898/app-api/"
+const BASE_URL = "http://8.130.186.54:9898/"
 
 // 创建axios实例
 console.log('BASE_URL ',BASE_URL);

@@ -1,8 +1,6 @@
 import instance from '../utils/request/http';
+import request from '../utils/axios';
 
-console.log("****************")
-console.log(instance.baseURL);
-console.log("****************")
 // 用户注册
 export const userRegMail = form => instance.post('api/user/reg', form);
 
@@ -15,10 +13,8 @@ export const mailValidate = form => instance.post('api/user/validate', form);
 
 // 账号登录
 export const AccountuserLogin = form => {
-  instance.post('api/user/login', form)
-  console.log("****************")
-  console.log(instance.baseURL);
-  console.log("****************")
+  
+  return instance.post('api/user/login', form);
 };
 
 // 验证码登录
@@ -30,3 +26,19 @@ export const getUserdetail = params =>
 
 // 修改用户信息
 export const EditUserInfo = form => instance.put('api/user/edit', form);
+
+export const getUserTrack = async (userId, startTime, endTime) => {
+    try {
+        const response = await request.get('/app-api/linban/user-track/time-range', {
+            params: {
+                userId,
+                startTime,
+                endTime
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('获取用户轨迹失败:', error);
+        throw error;
+    }
+};

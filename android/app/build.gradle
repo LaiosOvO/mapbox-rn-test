@@ -74,9 +74,8 @@ def enableSeparateBuildPerCPUArchitecture = true
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
-
-
 android {
+    compileSdkVersion 36
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
@@ -84,36 +83,20 @@ android {
     namespace "com.himate"
     defaultConfig {
         applicationId "com.himate"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        minSdkVersion 23 // 修改为 23
+        targetSdkVersion 36
         versionCode 1
         versionName "0.1.3"
         // 选取头像配置
         vectorDrawables.useSupportLibrary = true
 
-
         manifestPlaceholders = [
             MAPBOX_ACCESS_TOKEN: project.properties['MAPBOX_DOWNLOADS_TOKEN'] ?: ""
         ]
-
     }
 
-    compileOptions {
-            sourceCompatibility JavaVersion.VERSION_17
-            targetCompatibility JavaVersion.VERSION_17
-        }
 
-        kotlinOptions {
-            jvmTarget = "17"
-        }
 
-        java {
-            toolchain {
-                languageVersion = JavaLanguageVersion.of(17)
-            }
-        }
-    
-    
     packagingOptions {
         pickFirst '**/libjsc.so'
         pickFirst '**/libc++_shared.so'
@@ -135,16 +118,16 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-       
+
     }
-    splits {  
-        abi {  
-            reset()  
-            enable true  
-            universalApk false  // 如果只想生成分包，则设置为false  
-            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'  
-        }  
-    }  
+    splits {
+        abi {
+            reset()
+            enable true
+            universalApk false  // 如果只想生成分包，则设置为false
+            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
+    }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
@@ -165,7 +148,7 @@ android {
 dependencies {
     // Mapbox 核心依赖
     implementation "com.mapbox.maps:android:10.16.1"
-    
+
     // 自动包含 localization 扩展，无需单独声明
     // implementation "com.mapbox.extension:localization:1.0.0" // 删除这一行
 
@@ -178,3 +161,4 @@ dependencies {
         implementation jscFlavor
     }
 }
+

@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, PermissionsAndroid, Platform, Alert, TextInput, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, PermissionsAndroid, Platform, Alert, TextInput, TouchableOpacity, Modal } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import Geolocation from '@react-native-community/geolocation';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useSelector } from 'react-redux';
 import BottomNavBar from '../components/BottomNavBar';
 import DrawingTools from '../components/DrawingTools';
 import CommandCenter from '../components/CommandCenter';
 import AnnotationManager from '../components/AnnotationManager';
-import { getLabelUserPage, saveLabelUser,deleteLabelUser } from '../api/linban/label/index'
+import { getLabelUserPage, saveLabelUser, deleteLabelUser } from '../api/linban/label/index';
+import { getUserDetail, getGroupUsers, updateUserLocation } from '../api/linban';
+import UserInfoCard from '../components/UserInfoCard';
 
 Mapbox.setAccessToken('sk.eyJ1IjoiN3huM3VtbHQiLCJhIjoiY205M3Y3bzZuMG11NzJqcXozOTQ5YjB0YSJ9.fk8RU7RNlM0QDj9WUw-84A');
 
 const MapboxTest = () => {
     const navigation = useNavigation();
+    const userInfo = useSelector(state => state.userStore.userInfo);
     const [userLocation, setUserLocation] = useState(null);
     const [showAnnotationManager, setShowAnnotationManager] = useState(false);
     const [showDrawingTools, setShowDrawingTools] = useState(false);
@@ -21,26 +25,15 @@ const MapboxTest = () => {
     const [drawingMode, setDrawingMode] = useState(null);
     const [activeGeoJson, setActiveGeoJson] = useState(null);
     const [savedGeoJsons, setSavedGeoJsons] = useState([
-        {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [-122.084, 37.421998533333335] },
-            properties: { color: '#FF5722', lineWidth: 3, title: '默认点', description: '默认点标记' }
-        },
-        {
-            type: 'Feature',
-            geometry: { type: 'LineString', coordinates: [[-122.084, 37.421998333333335], [-122.084, 37.423998333333335]] },
-            properties: { color: '#4CAF50', lineWidth: 4, title: '默认线', description: '默认线段' }
-        },
-        {
-            type: 'Feature',
-            geometry: { type: 'Polygon', coordinates: [[[-122.084, 37.421998333333335], [-122.084, 37.4259981], [-122.284, 37.424998233333335], [-122.384, 37.423998433333335], [-122.084, 37.421998333333335]]] },
-            properties: { color: '#FF0000', lineWidth: 3, title: '默认多边形', description: '默认多边形区域' }
-        }
     ]);
     const [drawingStyle, setDrawingStyle] = useState({
         color: '#4285F4',
         lineWidth: 3
     });
+    const [groupUsers, setGroupUsers] = useState([]);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [showUserInfo, setShowUserInfo] = useState(false);
+    const locationUpdateTimer = useRef(null);
 
     const mapRef = useRef(null);
 
@@ -49,6 +42,7 @@ const MapboxTest = () => {
             (position) => {
                 const { longitude, latitude } = position.coords;
                 setUserLocation([longitude, latitude]);
+                console.log(userLocation)
             },
             (error) => {
                 console.log('获取位置失败:', error);
@@ -94,6 +88,53 @@ const MapboxTest = () => {
         requestLocationPermission();
     }, []);
 
+    // 每5分钟更新一次用户位置
+    useEffect(() => {
+        const updateLocation = () => {
+            Geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    try {
+                        await updateUserLocation({
+                            latitude,
+                            longitude,
+                            timestamp: new Date().toISOString(),
+                            userId: userInfo.id
+                        });
+                        loadGroupUsers();
+                    } catch (error) {
+                        console.error('更新位置失败:', error);
+                    }
+                },
+                (error) => console.error('获取位置失败:', error),
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+            );
+        };
+
+        updateLocation();
+        const intervalId = setInterval(updateLocation, 5 * 60 * 1000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const loadGroupUsers = async () => {
+        try {
+
+            const userDetail = await getUserDetail(userInfo.id);
+            console.log("*******")
+            console.log(userDetail);
+            console.log("*******")
+            const users = await getGroupUsers(userDetail.data.jobGroupId);
+            if (users.code === 0) {
+                setGroupUsers(users);
+            } else {
+                console.error('加载用户失败:', users.msg);
+            }
+        } catch (error) {
+            console.error('加载用户失败:', error);
+        }
+    };
+
     const handleToolSelect = (tool) => {
         setDrawingMode(tool.id);
         const newActiveGeoJson = {
@@ -112,38 +153,20 @@ const MapboxTest = () => {
 
     };
 
-    const handleMapPress = (event) => {
-        if (!drawingMode || !activeGeoJson) return;
+    const handleMapPress = async (event) => {
+        // 关闭所有侧边栏
+        setShowAnnotationManager(false);
+        setShowDrawingTools(false);
+        setShowCommandCenter(false);
 
-        const coords = event.geometry.coordinates;
-        const newGeoJson = JSON.parse(JSON.stringify(activeGeoJson));
+        // 如果点击空白处，关闭用户信息卡片
+        setShowUserInfo(false);
+        setSelectedUser(null);
+    };
 
-        try {
-            switch (newGeoJson.geometry.type) {
-                case 'Point':
-                    newGeoJson.geometry.coordinates = coords;
-                    break;
-                case 'LineString':
-                    newGeoJson.geometry.coordinates = [
-                        ...(newGeoJson.geometry.coordinates || []),
-                        coords
-                    ];
-                    break;
-                case 'Polygon':
-                    if (!newGeoJson.geometry.coordinates[0]) {
-                        newGeoJson.geometry.coordinates[0] = [];
-                    }
-                    newGeoJson.geometry.coordinates[0] = [
-                        ...(newGeoJson.geometry.coordinates[0] || []),
-                        coords
-                    ];
-                    break;
-            }
-            setActiveGeoJson(newGeoJson);
-        } catch (error) {
-            console.error('处理坐标时出错:', error);
-            Alert.alert('绘图错误', '在处理绘图坐标时出现错误，请稍后重试。');
-        }
+    const handleUserPress = (user) => {
+        setSelectedUser(user);
+        setShowUserInfo(true);
     };
 
     const handleSaveDrawing = async (drawingInfo) => {
@@ -183,20 +206,19 @@ const MapboxTest = () => {
 
         let data = {
             labelName: drawingInfo.title.trim(),
-            labelRemark: drawingInfo.description .trim(),
+            labelRemark: drawingInfo.description.trim(),
             dataJson: finalizedGeoJson,
-            userId: 1
+            userId: userInfo.id
         }
-        console.log("*************************************************");
-        console.log("data \n ",data);
-        console.log("*************************************************");
 
-        let res = saveLabelUser(data);
-        console.log("res \n ",res);
-    
-        await setSavedGeoJsons(prev => [...prev, finalizedGeoJson]);
-        setActiveGeoJson(null);
-        setDrawingMode(null);
+        let res = await saveLabelUser(data);
+        if (res.code === 0) {
+            await setSavedGeoJsons(prev => [...prev, finalizedGeoJson]);
+            setActiveGeoJson(null);
+            setDrawingMode(null);
+        } else {
+            Alert.alert('保存失败', res.msg || '保存标注失败，请重试');
+        }
     };
 
     const handleCancelDrawing = () => {
@@ -300,6 +322,51 @@ const MapboxTest = () => {
         navigation.navigate('History');
     };
 
+    const renderUserMarkers = () => {
+        if (!groupUsers?.data || groupUsers.data.length === 0) {
+            return null;
+        }
+
+        return groupUsers.data.map((user) => {
+            // 如果用户没有位置信息，跳过渲染
+            if (!user.longitude || !user.latitude) {
+                return null;
+            }
+
+            return (
+                <Mapbox.PointAnnotation
+                    key={user.id}
+                    id={`user-${user.id}`}
+                    coordinate={[parseFloat(user.longitude), parseFloat(user.latitude)]}
+                    onSelected={() => handleUserPress(user)}
+                >
+                    <View style={[
+                        styles.userMarker,
+                        {
+                            backgroundColor: user.isAlive === 1 ? '#52c41a' : '#f5222d',
+                            width: user.id === userInfo?.id ? 20 : 16,
+                            height: user.id === userInfo?.id ? 20 : 16,
+                            borderRadius: user.id === userInfo?.id ? 10 : 8,
+                        }
+                    ]} />
+                </Mapbox.PointAnnotation>
+            );
+        }).filter(Boolean);
+    };
+
+    // 添加定时刷新用户位置的函数
+    useEffect(() => {
+        // 初始加载
+        loadGroupUsers();
+
+        // 设置定时器，每5秒刷新一次
+        const refreshInterval = setInterval(() => {
+            loadGroupUsers();
+        }, 500000);
+
+        return () => clearInterval(refreshInterval);
+    }, []);
+
     return (
         <View style={styles.container}>
             <Mapbox.MapView
@@ -321,6 +388,7 @@ const MapboxTest = () => {
                     </Mapbox.PointAnnotation>
                 )}
 
+                {renderUserMarkers()}
                 {renderFeatures()}
             </Mapbox.MapView>
 
@@ -369,6 +437,16 @@ const MapboxTest = () => {
                 onDrawPress={() => handleBottomBarPress('draw')}
                 onCommandPress={() => handleBottomBarPress('command')}
             />
+
+            {showUserInfo && selectedUser && (
+                <UserInfoCard
+                    user={selectedUser}
+                    onClose={() => {
+                        setShowUserInfo(false);
+                        setSelectedUser(null);
+                    }}
+                />
+            )}
         </View>
     );
 };
@@ -379,6 +457,7 @@ const styles = StyleSheet.create({
     },
     map: {
         flex: 1,
+        marginTop: 100,
     },
     userLocationMarker: {
         width: 20,
@@ -390,23 +469,27 @@ const styles = StyleSheet.create({
     },
     searchContainer: {
         position: 'absolute',
-        top: 50,
-        left: 15,
-        right: 15,
-        zIndex: 1,
-    },
-    searchBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'white',
-        borderRadius: 25,
-        paddingVertical: 8,
+        top: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        paddingTop: 50,
+        paddingBottom: 15,
         paddingHorizontal: 15,
+        zIndex: 1,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3,
+        elevation: 1,
+    },
+    searchBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 25,
+        paddingVertical: 8,
+        paddingHorizontal: 15,
     },
     searchIcon: {
         marginRight: 8,
@@ -419,6 +502,27 @@ const styles = StyleSheet.create({
         color: '#333',
         padding: 0,
     },
+    sidebarContainer: {
+        position: 'absolute',
+        top: 100,
+        right: 0,
+        bottom: 0,
+        width: '80%',
+        backgroundColor: '#fff',
+        zIndex: 999,
+        shadowColor: '#000',
+        shadowOffset: { width: -2, height: 0 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 999,
+    },
+    userMarker: {
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        borderWidth: 2,
+        borderColor: 'white',
+    },
 });
 
-export default MapboxTest;    
+export default MapboxTest;

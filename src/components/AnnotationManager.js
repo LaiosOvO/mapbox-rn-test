@@ -10,10 +10,13 @@ import {
 import {Colors} from 'react-native-ui-lib';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {labelList, page} from '../api/linban/folder/index';
+import { useSelector } from 'react-redux';
 
 import dayjs from 'dayjs';
 
 const AnnotationManager = ({onClose, navigation}) => {
+  const userInfo = useSelector(state => state.userStore.userInfo);
+
   const [labels, setLabels] = useState([]);
   const [personalAnnotations, setPersonalAnnotations] = useState([
     // { id: 1, name: '监测点 (12)', color: Colors.primary },
@@ -36,8 +39,10 @@ const AnnotationManager = ({onClose, navigation}) => {
     let res = await page({
       pageNo: 1,
       pageSize: 15,
-      userId: 1,
+      userId: userInfo.id,
     });
+
+    console.log(userInfo.id)
 
     let list = res.data.list;
 
@@ -127,12 +132,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 60,
     width: '80%',
+    elevation: 9999,
+    zIndex: 9999,
     backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: {width: -2, height: 0},
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 5,
   },
   header: {
     flexDirection: 'row',

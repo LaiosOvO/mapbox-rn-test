@@ -22,9 +22,9 @@ const BottomNavBar = ({
         <TouchableOpacity style={styles.iconButton} onPress={onLocationPress}>
           <Icon name="edit" size={24} color={Colors.black} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={onDrawPress}>
+        {/* <TouchableOpacity style={styles.iconButton} onPress={onDrawPress}>
           <Icon name="edit" size={24} color={Colors.black} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity style={styles.iconButton} onPress={onCommandPress}>
           <Icon name="crop_square" size={24} color={Colors.black} />
         </TouchableOpacity>
