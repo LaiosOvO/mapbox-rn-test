@@ -244,42 +244,42 @@ const User = ({navigation}) => {
                 navigation.navigate('ChatMsg');
               }}
             />
-            <ListItem
-              ItemName={'云端数据'}
-              IconName={'database'}
-              IconSize={20}
-              IconColor={Colors.orange40}
-              Fun={() => {
-                navigation.navigate('DataManager');
-              }}
-            />
-            <ListItem
-              ItemName={'版本更新'}
-              IconName={'cloud-download'}
-              IconSize={20}
-              IconColor={Colors.violet40}
-              RightText={versionName}
-              Fun={() => {
-                if (Platform.OS === 'ios') {
-                  showToast('暂不支持ios版本', 'warning');
-                  return;
-                }
-                setShowAppUpate(true);
-                checkUpdate();
-              }}
-            />
-            <ListItem
-              ItemName={'关于' + appDisplayName}
-              IconName={'cube'}
-              IconSize={20}
-              IconColor={Colors.cyan30}
-              Fun={() => {
-                navigation.navigate('WebView', {
-                  title: '关于' + appDisplayName,
-                  url: STATIC_URL + 'index.html',
-                });
-              }}
-            />
+            {/*<ListItem*/}
+            {/*  ItemName={'云端数据'}*/}
+            {/*  IconName={'database'}*/}
+            {/*  IconSize={20}*/}
+            {/*  IconColor={Colors.orange40}*/}
+            {/*  Fun={() => {*/}
+            {/*    navigation.navigate('DataManager');*/}
+            {/*  }}*/}
+            {/*/>*/}
+            {/*<ListItem*/}
+            {/*  ItemName={'版本更新'}*/}
+            {/*  IconName={'cloud-download'}*/}
+            {/*  IconSize={20}*/}
+            {/*  IconColor={Colors.violet40}*/}
+            {/*  RightText={versionName}*/}
+            {/*  Fun={() => {*/}
+            {/*    if (Platform.OS === 'ios') {*/}
+            {/*      showToast('暂不支持ios版本', 'warning');*/}
+            {/*      return;*/}
+            {/*    }*/}
+            {/*    setShowAppUpate(true);*/}
+            {/*    checkUpdate();*/}
+            {/*  }}*/}
+            {/*/>*/}
+            {/*<ListItem*/}
+            {/*  ItemName={'关于' + appDisplayName}*/}
+            {/*  IconName={'cube'}*/}
+            {/*  IconSize={20}*/}
+            {/*  IconColor={Colors.cyan30}*/}
+            {/*  Fun={() => {*/}
+            {/*    navigation.navigate('WebView', {*/}
+            {/*      title: '关于' + appDisplayName,*/}
+            {/*      url: STATIC_URL + 'index.html',*/}
+            {/*    });*/}
+            {/*  }}*/}
+            {/*/>*/}
           </Card>
           <Dialog
             visible={showAppUpate}

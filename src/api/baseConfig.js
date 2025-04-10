@@ -29,12 +29,12 @@ export const getBaseConfig = async () => {
     }
   } else {
     return {
-      BASE_URL,
-      STATIC_URL,
-      SOCKET_URL,
-      FAST_STATIC_URL,
+      BASE_URL: "http://8.130.186.54:3000/",
+      STATIC_URL:"http://8.130.186.54:3001/static/",
+      SOCKET_URL:"http://8.130.186.54:3001/socket",
+      FAST_STATIC_URL:"http://8.130.186.54:3002/static/",
       MSG_SECRET,
-      THUMBNAIL_URL: BASE_URL + 'Thumbnail/',
+      THUMBNAIL_URL: "http://8.130.186.54:3000/" + 'Thumbnail/',
     };
   }
 };

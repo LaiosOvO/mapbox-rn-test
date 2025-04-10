@@ -58,6 +58,9 @@ const SocketProvider = props => {
 
   useEffect(() => {
     if (userToken && !isEmptyObject(baseConfig) && !socketReady) {
+      console.log("*************")
+      console.log(baseConfig?.SOCKET_URL)
+      console.log("************")
       socketInit(baseConfig?.SOCKET_URL, userToken);
     }
   }, [userToken, baseConfig]);
