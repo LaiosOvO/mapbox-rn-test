@@ -13,7 +13,8 @@ const DrawingTools = ({
     onCancel, 
     onClearMapData, 
     savedFeatures, 
-    onSetSavedFeatures 
+    onSetSavedFeatures, 
+    onRefreshData
 }) => {
     const [userLabel, setUserLabel] = useState([]);
     const [title, setTitle] = useState('');
@@ -81,9 +82,10 @@ const DrawingTools = ({
         });
 
         onCancel();
-        onClearMapData();
+        // onClearMapData();
         loadData();
-
+        
+        onRefreshData()
         setTitle('');
         setDescription('');
     };
@@ -104,6 +106,29 @@ const DrawingTools = ({
             console.error('解析GeoJSON失败:', e);
             Alert.alert('错误', '解析标注数据失败');
         }
+    };
+
+    const handleClearMapData = async () => {
+        Alert.alert(
+            '确认清空',
+            '确定要清空地图上的所有标注吗？',
+            [
+                {
+                    text: '取消',
+                    style: 'cancel'
+                },
+                {
+                    text: '确定',
+                    onPress: async () => {
+                        await onClearMapData();
+                        // 清空后立即重新获取数据
+                        if (onRefreshData) {
+                            onRefreshData();
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     if (!visible) return null;

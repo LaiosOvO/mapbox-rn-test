@@ -10,8 +10,8 @@ export const listLabelUserPage = param => instance.get('/app-api/linban/label/li
 export const saveLabelUser = data => instance.post('/app-api/linban/label/create', data);
 
 
-export const updateLabelUser = data =>
-    instance.put('/app-api/linban/label/update', {data});
+export const updateLabelUser = (id,data) =>
+    instance.put('/app-api/linban/label/update/'+id, {data});
 
-export const deleteLabelUser = data => instance.delete('/app-api/linban/label/delete?id=' + data.id);
+export const deleteLabelUser = id => instance.delete('/app-api/linban/label/delete?id=' + id);
 

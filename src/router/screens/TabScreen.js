@@ -29,7 +29,7 @@ const renderTabinfo = (name, type, focused = false) => {
       break;
     case 'Map':
       IconComponent = MaterialIcons;
-      IconName = focused ? 'map' : 'map-o';
+      IconName = 'map';
       tablabel = '地图';
       break;
     case 'User':
@@ -53,6 +53,7 @@ const TabScreen = () => {
 
   return (
     <Tab.Navigator
+      initialRouteName="Msg"
       screenOptions={({route}) => ({
         tabBarLabel: renderTabinfo(route.name, 'label'),
         tabBarActiveTintColor: themeColor,
@@ -66,7 +67,11 @@ const TabScreen = () => {
         headerStyle: {backgroundColor: themeColor, height: 46},
         headerTitleAlign: 'center',
         headerTitleStyle: {fontSize: 16, color: Colors.white},
-        tabBarStyle: isFullScreen ? {display: 'none'} : {},
+        tabBarStyle: {
+          display: 'flex',
+          height: 50,
+          paddingBottom: 5,
+        },
       })}>
       <Tab.Screen
         name="Msg"
@@ -85,7 +90,7 @@ const TabScreen = () => {
       <Tab.Screen
         name="Mate"
         options={({navigation}) => ({
-          title: 'Mate',
+          title: '好友',
           headerTitleAlign: 'left',
           headerRight: () => (
             <TouchableOpacity
@@ -108,7 +113,7 @@ const TabScreen = () => {
       <Tab.Screen
         name="User"
         options={{
-          title: '个人中心',
+          title: '我的',
         }}
         component={User}
       />
